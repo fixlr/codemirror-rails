@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'codemirror-rails'
-  s.version = '0.0.0'
+  s.version = '0.1'
   s.date = '2011-06-17'
   s.authors = ['Nathan Fixler']
   s.email = 'nathan@fixler.org'
