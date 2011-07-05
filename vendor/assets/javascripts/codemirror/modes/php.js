@@ -8,8 +8,34 @@
     keywords("abstract and array as break case catch cfunction class clone const continue declare " +
              "default do else elseif enddeclare endfor endforeach endif endswitch endwhile extends " +
              "final for foreach function global goto if implements interface instanceof namespace " +
-             "new or private protected public static switch throw try use var while xor");
-  var phpConfig = {name: "clike", keywords: phpKeywords, multiLineStrings: true, $vars: true};
+             "new or private protected public static switch throw try use var while xor return");
+  function heredoc(delim) {
+    return function(stream, state) {
+      if (stream.match(delim)) state.tokenize = null;
+      else stream.skipToEnd();
+      return "string";
+    }
+  }
+  var phpConfig = {
+    name: "clike",
+    keywords: phpKeywords,
+    atoms: keywords("true false null"),
+    multiLineStrings: true,
+    hooks: {
+      "$": function(stream, state) {
+        stream.eatWhile(/[\w\$_]/);
+        return "variable-2";
+      },
+      "<": function(stream, state) {
+        if (stream.match(/<</)) {
+          stream.eatWhile(/[\w\.]/);
+          state.tokenize = heredoc(stream.current().slice(3));
+          return state.tokenize(stream, state);
+        }
+        return false;
+      }
+    }
+  };
 
   CodeMirror.defineMode("php", function(config, parserConfig) {
     var htmlMode = CodeMirror.getMode(config, "text/html");
@@ -53,9 +79,9 @@
         var html = htmlMode.startState();
         return {html: html,
                 php: phpMode.startState(),
-                curMode: htmlMode,
-                curState: html,
-                curClose: null}
+                curMode:	parserConfig.startOpen ? phpMode : htmlMode,
+                curState:	parserConfig.startOpen ? phpMode.startState() : html,
+                curClose:	parserConfig.startOpen ? /^\?>/ : null}
       },
 
       copyState: function(state) {
@@ -80,5 +106,6 @@
     }
   });
   CodeMirror.defineMIME("application/x-httpd-php", "php");
+  CodeMirror.defineMIME("application/x-httpd-php-open", {name: "php", startOpen: true});
   CodeMirror.defineMIME("text/x-php", phpConfig);
 })();
