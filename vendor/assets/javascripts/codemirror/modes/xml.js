@@ -25,7 +25,7 @@ CodeMirror.defineMode("xml", function(config, parserConfig) {
           else return null;
         }
         else if (stream.match("--")) return chain(inBlock("comment", "-->"));
-        else if (stream.match("DOCTYPE")) {
+        else if (stream.match("DOCTYPE", true, true)) {
           stream.eatWhile(/[\w\._\-]/);
           return chain(inBlock("meta", ">"));
         }
@@ -170,8 +170,12 @@ CodeMirror.defineMode("xml", function(config, parserConfig) {
   }
   function attvalue(type) {
     if (type == "word" && Kludges.allowUnquoted) {setStyle = "string"; return cont();}
-    if (type == "string") return cont();
+    if (type == "string") return cont(attvaluemaybe);
     return pass();
+  }
+  function attvaluemaybe(type) {
+    if (type == "string") return cont(attvaluemaybe);
+    else return pass();
   }
 
   return {
