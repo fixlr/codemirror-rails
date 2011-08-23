@@ -119,7 +119,7 @@ var CodeMirror = (function() {
       focus: function(){focusInput(); onFocus(); fastPoll();},
       setOption: function(option, value) {
         options[option] = value;
-        if (option == "lineNumbers" || option == "gutter") gutterChanged();
+        if (option == "lineNumbers" || option == "gutter" || option == "firstLineNumber") gutterChanged();
         else if (option == "mode" || option == "indentUnit") loadMode();
         else if (option == "readOnly" && value == "nocursor") input.blur();
         else if (option == "theme") scroller.className = scroller.className.replace(/cm-s-\w+/, "cm-s-" + value);
@@ -127,7 +127,9 @@ var CodeMirror = (function() {
       getOption: function(option) {return options[option];},
       undo: operation(undo),
       redo: operation(redo),
-      indentLine: operation(function(n) {if (isLine(n)) indentLine(n, "smart");}),
+      indentLine: operation(function(n, dir) {
+        if (isLine(n)) indentLine(n, dir == null ? "smart" : dir ? "add" : "subtract");
+      }),
       historySize: function() {return {undo: history.done.length, redo: history.undone.length};},
       matchBrackets: operation(function(){matchBrackets(true);}),
       getTokenAt: function(pos) {
@@ -200,7 +202,8 @@ var CodeMirror = (function() {
       refresh: function(){updateDisplay(true);},
       getInputField: function(){return input;},
       getWrapperElement: function(){return wrapper;},
-      getScrollerElement: function(){return scroller;}
+      getScrollerElement: function(){return scroller;},
+      getGutterElement: function(){return gutter;}
     };
 
     function setValue(code) {
@@ -340,6 +343,7 @@ var CodeMirror = (function() {
         if (mod && code == 90) {undo(); return e_preventDefault(e);} // ctrl-z
         if (mod && ((e.shiftKey && code == 90) || code == 89)) {redo(); return e_preventDefault(e);} // ctrl-shift-z, ctrl-y
       }
+      if (code == 36) { if (options.smartHome) { smartHome(); return e_preventDefault(e); } }
 
       // Key id to use in the movementKeys map. We also pass it to
       // fastPoll in order to 'self learn'. We need this because
@@ -347,14 +351,16 @@ var CodeMirror = (function() {
       // its start when it is inverted and a movement key is pressed
       // (and later restore it again), shouldn't be used for
       // non-movement keys.
-      curKeyId = (mod ? "c" : "") + code;
-      if (sel.inverted && movementKeys.hasOwnProperty(curKeyId)) {
+      curKeyId = (mod ? "c" : "") + (e.altKey ? "a" : "") + code;
+      if (sel.inverted && movementKeys[curKeyId] === true) {
         var range = selRange(input);
         if (range) {
           reducedSelection = {anchor: range.start};
           setSelRange(input, range.start, range.start);
         }
       }
+      // Don't save the key as a movementkey unless it had a modifier
+      if (!mod && !e.altKey) curKeyId = null;
       fastPoll(curKeyId);
     }
     function onKeyUp(e) {
@@ -566,7 +572,10 @@ var CodeMirror = (function() {
       function p() {
         startOperation();
         var changed = readInput();
-        if (changed == "moved" && keyId) movementKeys[keyId] = true;
+        if (changed && keyId) {
+          if (changed == "moved" && movementKeys[keyId] == null) movementKeys[keyId] = true;
+          if (changed == "changed") movementKeys[keyId] = false;
+        }
         if (!changed && !missed) {missed = true; poll.set(80, p);}
         else {pollingFast = false; slowPoll();}
         endOperation();
@@ -663,6 +672,12 @@ var CodeMirror = (function() {
       if (options.readOnly != "nocursor") input.focus();
     }
 
+    function scrollEditorIntoView() {
+      if (!cursor.getBoundingClientRect) return;
+      var rect = cursor.getBoundingClientRect();
+      var winH = window.innerHeight || document.body.offsetHeight || document.documentElement.offsetHeight;
+      if (rect.top < 0 || rect.bottom > winH) cursor.scrollIntoView();
+    }
     function scrollCursorIntoView() {
       var cursor = localCoords(sel.inverted ? sel.from : sel.to);
       return scrollIntoView(cursor.x, cursor.y, cursor.x, cursor.yBot);
@@ -766,8 +781,8 @@ var CodeMirror = (function() {
       if (different) {
         lastHeight = scroller.clientHeight;
         code.style.height = (lines.length * lineHeight() + 2 * paddingTop()) + "px";
-        updateGutter();
       }
+      if (different || updates.length) updateGutter();
 
       if (maxWidth == null) maxWidth = stringWidth(maxLine);
       if (maxWidth > scroller.clientWidth) {
@@ -871,10 +886,12 @@ var CodeMirror = (function() {
     }
     function updateCursor() {
       var head = sel.inverted ? sel.from : sel.to, lh = lineHeight();
-      var x = charX(head.line, head.ch) + "px", y = (head.line - showingFrom) * lh + "px";
+      var x = charX(head.line, head.ch);
       inputDiv.style.top = (head.line * lh - scroller.scrollTop) + "px";
+      inputDiv.style.left = (x - scroller.scrollLeft) + "px";
       if (posEq(sel.from, sel.to)) {
-        cursor.style.top = y; cursor.style.left = x;
+        cursor.style.top = (head.line - showingFrom) * lh + "px";
+        cursor.style.left = x + "px";
         cursor.style.display = "";
       }
       else cursor.style.display = "none";
@@ -993,6 +1010,10 @@ var CodeMirror = (function() {
         break;
       }
       return true;
+    }
+    function smartHome() {
+      var firstNonWS = Math.max(0, lines[sel.from.line].text.search(/\S/));
+      setCursor(sel.from.line, sel.from.ch <= firstNonWS && sel.from.ch ? 0 : firstNonWS, true);
     }
 
     function indentLine(n, how) {
@@ -1190,8 +1211,8 @@ var CodeMirror = (function() {
 
       var oldCSS = input.style.cssText;
       inputDiv.style.position = "absolute";
-      input.style.cssText = "position: fixed; width: 30px; height: 30px; top: " + (e_pageY(e) - 1) +
-        "px; left: " + (e_pageX(e) - 1) + "px; z-index: 1000; background: white; " +
+      input.style.cssText = "position: fixed; width: 30px; height: 30px; top: " + (e.clientY - 5) +
+        "px; left: " + (e.clientX - 5) + "px; z-index: 1000; background: white; " +
         "border-width: 0; outline: none; overflow: hidden; opacity: .05; filter: alpha(opacity=5);";
       leaveInputAlone = true;
       var val = input.value = getSelection();
@@ -1284,7 +1305,7 @@ var CodeMirror = (function() {
         if (line.stateAfter) return search;
         var indented = line.indentation();
         if (minline == null || minindent > indented) {
-          minline = search;
+          minline = search - 1;
           minindent = indented;
         }
       }
@@ -1321,25 +1342,26 @@ var CodeMirror = (function() {
         if (state) state = copyState(mode, state);
         else state = startState(mode);
 
-        var unchanged = 0, compare = mode.compareStates;
+        var unchanged = 0, compare = mode.compareStates, realChange = false;
         for (var i = start, l = lines.length; i < l; ++i) {
           var line = lines[i], hadState = line.stateAfter;
           if (+new Date > end) {
             work.push(i);
             startWorker(options.workDelay);
-            changes.push({from: task, to: i + 1});
+            if (realChange) changes.push({from: task, to: i + 1});
             return;
           }
           var changed = line.highlight(mode, state);
+          if (changed) realChange = true;
           line.stateAfter = copyState(mode, state);
           if (compare) {
             if (hadState && compare(hadState, state)) break;
           } else {
-            if (changed || !hadState) unchanged = 0;
+            if (changed !== false || !hadState) unchanged = 0;
             else if (++unchanged > 3) break;
           }
         }
-        changes.push({from: task, to: i + 1});
+        if (realChange) changes.push({from: task, to: i + 1});
       }
       if (foundWork && options.onHighlightComplete)
         options.onHighlightComplete(instance);
@@ -1362,7 +1384,7 @@ var CodeMirror = (function() {
       if (changes.length) updateDisplay(changes);
       else if (selectionChanged) updateCursor();
       if (reScroll) scrollCursorIntoView();
-      if (selectionChanged) restartBlink();
+      if (selectionChanged) {scrollEditorIntoView(); restartBlink();}
 
       // updateInput can be set to a boolean value to force/prevent an
       // update.
@@ -1527,6 +1549,7 @@ var CodeMirror = (function() {
     gutter: false,
     firstLineNumber: 1,
     readOnly: false,
+    smartHome: true,
     onChange: null,
     onCursorActivity: null,
     onGutterClick: null,
@@ -1660,7 +1683,7 @@ var CodeMirror = (function() {
       if (ok) {++this.pos; return ch;}
     },
     eatWhile: function(match) {
-      var start = this.start;
+      var start = this.pos;
       while (this.eat(match)){}
       return this.pos > start;
     },
@@ -1769,10 +1792,10 @@ var CodeMirror = (function() {
       }
       if (st.length != pos) {st.length = pos; changed = true;}
       if (pos && st[pos-2] != prevWord) changed = true;
-      // Short lines with simple highlights always count as changed,
-      // because they are likely to highlight the same way in various
-      // contexts.
-      return changed || (st.length < 5 && this.text.length < 10);
+      // Short lines with simple highlights return null, and are
+      // counted as changed by the driver because they are likely to
+      // highlight the same way in various contexts.
+      return changed || (st.length < 5 && this.text.length < 10 ? null : false);
     },
     // Fetch the parser token for a given character. Useful for hacks
     // that want to inspect the mode state (say, for completion).
@@ -1929,16 +1952,6 @@ var CodeMirror = (function() {
     else if (e.button & 1) return 1;
     else if (e.button & 2) return 3;
     else if (e.button & 4) return 2;
-  }
-  function e_pageX(e) {
-    if (e.pageX != null) return e.pageX;
-    var doc = e_target(e).ownerDocument;
-    return e.clientX + doc.body.scrollLeft + doc.documentElement.scrollLeft;
-  }
-  function e_pageY(e) {
-    if (e.pageY != null) return e.pageY;
-    var doc = e_target(e).ownerDocument;
-    return e.clientY + doc.body.scrollTop + doc.documentElement.scrollTop;
   }
 
   // Event handler registration. If disconnect is true, it'll return a
