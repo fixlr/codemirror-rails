@@ -9,5 +9,5 @@ Gem::Specification.new do |s|
   s.description = 'This gem provides CodeMirror assets for your Rails 3 application.'
   s.homepage = 'https://rubygems.org/gems/codemirror-rails'
 
-  s.files = Dir["#{File.dirname(__FILE__)}/**/*"]
+  s.files = `git ls-files`.split("\n")
 end
