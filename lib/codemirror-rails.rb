@@ -1,2 +1,8 @@
 require 'codemirror-rails/version'
-require 'ckeditor-rails/engine'
+require 'codemirror-rails/engine'
+
+module Codemirror
+  module Rails
+    # Your code goes here...
+  end
+end
