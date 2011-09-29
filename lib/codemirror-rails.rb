@@ -1,1 +1,2 @@
-require 'codemirror/rails'
+require 'codemirror-rails/version'
+require 'ckeditor-rails/engine'
