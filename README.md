@@ -1,8 +1,7 @@
 CodeMirror for Rails 3
 ======================
 
-Generator to install current version of CodeMirror 2 into a
-Rails 3 project. 
+Use current version of CodeMirror 2 within a Rails 3 project using asset pipeline.
 
 ```
 gem install codemirror-rails
@@ -11,5 +10,5 @@ gem install codemirror-rails
 And...
 
 ```
-rails generate codemirror:install
+=require codemirror/codemirror
 ```
