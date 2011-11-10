@@ -10,4 +10,6 @@ Gem::Specification.new do |s|
   s.homepage = 'https://rubygems.org/gems/codemirror-rails'
 
   s.files = `git ls-files`.split("\n")
+
+  s.add_runtime_dependency 'railties', '~> 3.0'
 end
