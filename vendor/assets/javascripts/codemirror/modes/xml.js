@@ -193,6 +193,7 @@ CodeMirror.defineMode("xml", function(config, parserConfig) {
 
       setStyle = type = tagName = null;
       var style = state.tokenize(stream, state);
+      state.type = type;
       if ((style || type) && style != "comment") {
         curState = state;
         while (true) {
@@ -217,7 +218,7 @@ CodeMirror.defineMode("xml", function(config, parserConfig) {
     },
 
     compareStates: function(a, b) {
-      if (a.indented != b.indented) return false;
+      if (a.indented != b.indented || a.tokenize != b.tokenize) return false;
       for (var ca = a.context, cb = b.context; ; ca = ca.prev, cb = cb.prev) {
         if (!ca || !cb) return ca == cb;
         if (ca.tagName != cb.tagName) return false;

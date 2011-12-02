@@ -8,7 +8,8 @@ CodeMirror.defineMode("rust", function() {
     "lambda": "fn", "type": "type", "tag": "tag", "mod": "mod",
     "as": "op", "true": "atom", "false": "atom", "assert": "op", "check": "op",
     "claim": "op", "native": "ignore", "unsafe": "ignore", "import": "else-style",
-    "export": "else-style", "copy": "op", "log": "op", "log_err": "op"
+    "export": "else-style", "copy": "op", "log": "op", "log_err": "op",
+    "use": "op", "bind": "op"
   };
   var typeKeywords = function() {
     var keywords = {"fn": "fn", "block": "fn", "obj": "obj"};
@@ -83,7 +84,7 @@ CodeMirror.defineMode("rust", function() {
       return r("prefix", "variable-2");
     }
     if (state.keywords.propertyIsEnumerable(content))
-      return r(state.keywords[content], "keyword");
+      return r(state.keywords[content], content.match(/true|false/) ? "atom" : "keyword");
     return r("name", "variable");
   }
 
@@ -170,13 +171,13 @@ CodeMirror.defineMode("rust", function() {
 
   function block(type) {
     if (type == "}") return cont();
-    if (type == "let") return cont(pushlex("stat", "let"), letdef, poplex, block);
+    if (type == "let") return cont(pushlex("stat", "let"), letdef1, poplex, block);
     if (type == "fn") return cont(pushlex("stat"), fndef, poplex, block);
     if (type == "type") return cont(pushlex("stat"), tydef, endstatement, poplex, block);
     if (type == "tag") return cont(pushlex("stat"), tagdef, poplex, block);
     if (type == "mod") return cont(pushlex("stat"), mod, poplex, block);
     if (type == "open-attr") return cont(pushlex("]"), commasep(expression, "]"), poplex);
-    if (type == "ignore") return cont(block);
+    if (type == "ignore" || type.match(/[\]\);,]/)) return cont(block);
     return pass(pushlex("stat"), expression, poplex, endstatement, block);
   }
   function endstatement(type) {
@@ -213,15 +214,19 @@ CodeMirror.defineMode("rust", function() {
       if (content == "||") return cont(poplex, pushlex("}", "block"), block);
     }
     if (content == "mutable" || (content.match(/^\w+$/) && cx.stream.peek() == ":"
-                                 && !cx.stream.match("::", false))) return pass(recliteral);
+                                 && !cx.stream.match("::", false)))
+      return pass(record_of(expression));
     return pass(block);
   }
-  function recliteral(type) {
-    if (content == "mutable" || content == "with") {cx.marked = "keyword"; return cont(recliteral);}
-    if (content.match(/^\w*$/)) {cx.marked = "variable"; return cont(recliteral);}
-    if (type == ":") return cont(expression, recliteral);
-    if (type == "}") return cont();
-    return cont(recliteral);
+  function record_of(comb) {
+    function ro(type) {
+      if (content == "mutable" || content == "with") {cx.marked = "keyword"; return cont(ro);}
+      if (content.match(/^\w*$/)) {cx.marked = "variable"; return cont(ro);}
+      if (type == ":") return cont(comb, ro);
+      if (type == "}") return cont();
+      return cont(ro);
+    }
+    return ro;
   }
   function blockvars(type) {
     if (type == "name") {cx.marked = "def"; return cont(blockvars);}
@@ -229,11 +234,15 @@ CodeMirror.defineMode("rust", function() {
     return cont(blockvars);
   }
 
-  function letdef(type) {
-    if (type == ";") return cont();
-    if (content == "=") return cont(expression, letdef);
-    if (type == ",") return cont(letdef);
-    return pass(pattern, maybetype, letdef);
+  function letdef1(type) {
+    if (type.match(/[\]\)\};]/)) return cont();
+    if (content == "=") return cont(expression, letdef2);
+    if (type == ",") return cont(letdef1);
+    return pass(pattern, maybetype, letdef1);
+  }
+  function letdef2(type) {
+    if (type.match(/[\]\)\};,]/)) return pass(letdef1);
+    else return pass(expression, letdef2);
   }
   function maybetype(type) {
     if (type == ":") return cont(typecx, rtype, valcx);
@@ -291,6 +300,7 @@ CodeMirror.defineMode("rust", function() {
     if (type == "atom") return cont(rtypemaybeparam);
     if (type == "op" || type == "obj") return cont(rtype);
     if (type == "fn") return cont(fntype);
+    if (type == "{") return cont(pushlex("{"), record_of(rtype), poplex);
     return matchBrackets(type, rtype);
   }
   function rtypemaybeparam(type) {
@@ -306,6 +316,7 @@ CodeMirror.defineMode("rust", function() {
     if (type == "name") {cx.marked = "def"; return cont(patternmaybeop);}
     if (type == "atom") return cont(patternmaybeop);
     if (type == "op") return cont(pattern);
+    if (type.match(/[\]\)\};,]/)) return pass();
     return matchBrackets(type, pattern);
   }
   function patternmaybeop(type) {
@@ -314,16 +325,21 @@ CodeMirror.defineMode("rust", function() {
     else return pass();
   }
   function altbody(type) {
-    if (type == "{") return cont(pushlex("}", "alt"), altblock, poplex);
+    if (type == "{") return cont(pushlex("}", "alt"), altblock1, poplex);
     return pass();
   }
-  function altblock(type) {
+  function altblock1(type) {
     if (type == "}") return cont();
-    if (type == "|") return cont(altblock);
-    if (content == "when") {cx.marked = "keyword"; return cont(expression, altblock);}
-    if (type == "{") return cont(pushlex("}", "alt"), block, poplex, altblock);
-    return pass(pattern, altblock);
+    if (type == "|") return cont(altblock1);
+    if (content == "when") {cx.marked = "keyword"; return cont(expression, altblock2);}
+    if (type.match(/[\]\);,]/)) return cont(altblock1);
+    return pass(pattern, altblock2);
   }
+  function altblock2(type) {
+    if (type == "{") return cont(pushlex("}", "alt"), block, poplex, altblock1);
+    else return pass(altblock1);
+  }
+
   function macro(type) {
     if (type.match(/[\[\(\{]/)) return matchBrackets(type, expression);
     return pass();
