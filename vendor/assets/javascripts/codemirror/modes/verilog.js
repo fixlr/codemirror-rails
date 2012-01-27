@@ -1,11 +1,11 @@
-CodeMirror.defineMode("clike", function(config, parserConfig) {
+CodeMirror.defineMode("verilog", function(config, parserConfig) {
   var indentUnit = config.indentUnit,
       keywords = parserConfig.keywords || {},
       blockKeywords = parserConfig.blockKeywords || {},
       atoms = parserConfig.atoms || {},
       hooks = parserConfig.hooks || {},
       multiLineStrings = parserConfig.multiLineStrings;
-  var isOperatorChar = /[+\-*&%=<>!?|\/]/;
+  var isOperatorChar = /[&|~><!\)\(*#%@+\/=?\:;}{,\.\^\-\[\]]/;
 
   var curPunc;
 
@@ -15,7 +15,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
       var result = hooks[ch](stream, state);
       if (result !== false) return result;
     }
-    if (ch == '"' || ch == "'") {
+    if (ch == '"') {
       state.tokenize = tokenString(ch);
       return state.tokenize(stream, state);
     }
@@ -23,8 +23,8 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
       curPunc = ch;
       return null
     }
-    if (/\d/.test(ch)) {
-      stream.eatWhile(/[\w\.]/);
+    if (/[\d']/.test(ch)) {
+      stream.eatWhile(/[\w\.']/);
       return "number";
     }
     if (ch == "/") {
@@ -136,9 +136,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
 
     indent: function(state, textAfter) {
       if (state.tokenize != tokenBase && state.tokenize != null) return 0;
-      var ctx = state.context, firstChar = textAfter && textAfter.charAt(0);
-      if (ctx.type == "statement" && firstChar == "}") ctx = ctx.prev;
-      var closing = firstChar == ctx.type;
+      var firstChar = textAfter && textAfter.charAt(0), ctx = state.context, closing = firstChar == ctx.type;
       if (ctx.type == "statement") return ctx.indented + (firstChar == "{" ? 0 : indentUnit);
       else if (ctx.align) return ctx.column + (closing ? 0 : 1);
       else return ctx.indented + (closing ? 0 : indentUnit);
@@ -154,13 +152,23 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
     for (var i = 0; i < words.length; ++i) obj[words[i]] = true;
     return obj;
   }
-  var cKeywords = "auto if break int case long char register continue return default short do sizeof " +
-    "double static else struct entry switch extern typedef float union for unsigned " +
-    "goto while enum void const signed volatile";
 
-  function cppHook(stream, state) {
-    if (!state.startOfLine) return false;
-    stream.skipToEnd();
+  var verilogKeywords = "always and assign automatic begin buf bufif0 bufif1 case casex casez cell cmos config " +
+    "deassign default defparam design disable edge else end endcase endconfig endfunction endgenerate endmodule " +
+    "endprimitive endspecify endtable endtask event for force forever fork function generate genvar highz0 " +
+    "highz1 if ifnone incdir include initial inout input instance integer join large liblist library localparam " +
+    "macromodule medium module nand negedge nmos nor noshowcancelled not notif0 notif1 or output parameter pmos " +
+    "posedge primitive pull0 pull1 pulldown pullup pulsestyle_onevent pulsestyle_ondetect rcmos real realtime " +
+    "reg release repeat rnmos rpmos rtran rtranif0 rtranif1 scalared showcancelled signed small specify specparam " +
+    "strong0 strong1 supply0 supply1 table task time tran tranif0 tranif1 tri tri0 tri1 triand trior trireg " +
+    "unsigned use vectored wait wand weak0 weak1 while wire wor xnor xor";
+
+  var verilogBlockKeywords = "begin bufif0 bufif1 case casex casez config else end endcase endconfig endfunction " +
+    "endgenerate endmodule endprimitive endspecify endtable endtask for forever function generate if ifnone " +
+    "macromodule module primitive repeat specify table task while";
+
+  function metaHook(stream, state) {
+    stream.eatWhile(/[\w\$_]/);
     return "meta";
   }
 
@@ -176,59 +184,11 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
     return "string";
   }
 
-  CodeMirror.defineMIME("text/x-csrc", {
-    name: "clike",
-    keywords: words(cKeywords),
-    blockKeywords: words("case do else for if switch while struct"),
+  CodeMirror.defineMIME("text/x-verilog", {
+    name: "verilog",
+    keywords: words(verilogKeywords),
+    blockKeywords: words(verilogBlockKeywords),
     atoms: words("null"),
-    hooks: {"#": cppHook}
-  });
-  CodeMirror.defineMIME("text/x-c++src", {
-    name: "clike",
-    keywords: words(cKeywords + " asm dynamic_cast namespace reinterpret_cast try bool explicit new " +
-                    "static_cast typeid catch operator template typename class friend private " +
-                    "this using const_cast inline public throw virtual delete mutable protected " +
-                    "wchar_t"),
-    blockKeywords: words("catch class do else finally for if struct switch try while"),
-    atoms: words("true false null"),
-    hooks: {"#": cppHook}
-  });
-  CodeMirror.defineMIME("text/x-java", {
-    name: "clike",
-    keywords: words("abstract assert boolean break byte case catch char class const continue default " + 
-                    "do double else enum extends final finally float for goto if implements import " +
-                    "instanceof int interface long native new package private protected public " +
-                    "return short static strictfp super switch synchronized this throw throws transient " +
-                    "try void volatile while"),
-    blockKeywords: words("catch class do else finally for if switch try while"),
-    atoms: words("true false null"),
-    hooks: {
-      "@": function(stream, state) {
-        stream.eatWhile(/[\w\$_]/);
-        return "meta";
-      }
-    }
-  });
-  CodeMirror.defineMIME("text/x-csharp", {
-    name: "clike",
-    keywords: words("abstract as base bool break byte case catch char checked class const continue decimal" + 
-                    " default delegate do double else enum event explicit extern finally fixed float for" + 
-                    " foreach goto if implicit in int interface internal is lock long namespace new object" + 
-                    " operator out override params private protected public readonly ref return sbyte sealed short" + 
-                    " sizeof stackalloc static string struct switch this throw try typeof uint ulong unchecked" + 
-                    " unsafe ushort using virtual void volatile while add alias ascending descending dynamic from get" + 
-                    " global group into join let orderby partial remove select set value var yield"),
-    blockKeywords: words("catch class do else finally for foreach if struct switch try while"),
-    atoms: words("true false null"),
-    hooks: {
-      "@": function(stream, state) {
-        if (stream.eat('"')) {
-          state.tokenize = tokenAtString;
-          return tokenAtString(stream, state);
-        }
-        stream.eatWhile(/[\w\$_]/);
-        return "meta";
-      }
-    }
+    hooks: {"`": metaHook, "$": metaHook}
   });
 }());
