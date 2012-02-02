@@ -35,6 +35,14 @@ Additional syntax modes can be added to your application.js:
 //= require codemirror/modes/ruby
 ```
 
+### Adding a keymap
+
+Additional keymap bindings can be added to your application.js:
+
+```js
+//= require codemirror/keymaps/vim
+```
+
 ### Adding a theme
 
 Additional CSS themes can be added to your application.css
