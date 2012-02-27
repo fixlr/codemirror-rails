@@ -1,10 +1,38 @@
-CodeMirror.defineMode("clike", function(config, parserConfig) {
-  var indentUnit = config.indentUnit,
-      keywords = parserConfig.keywords || {},
-      blockKeywords = parserConfig.blockKeywords || {},
-      atoms = parserConfig.atoms || {},
-      hooks = parserConfig.hooks || {},
-      multiLineStrings = parserConfig.multiLineStrings;
+CodeMirror.defineMode("ecl", function(config) {
+
+  function words(str) {
+    var obj = {}, words = str.split(" ");
+    for (var i = 0; i < words.length; ++i) obj[words[i]] = true;
+    return obj;
+  }
+
+  function metaHook(stream, state) {
+    if (!state.startOfLine) return false;
+    stream.skipToEnd();
+    return "meta";
+  }
+
+  function tokenAtString(stream, state) {
+    var next;
+    while ((next = stream.next()) != null) {
+      if (next == '"' && !stream.eat('"')) {
+        state.tokenize = null;
+        break;
+      }
+    }
+    return "string";
+  }
+
+  var indentUnit = config.indentUnit;
+  var keyword = words("abs acos allnodes ascii asin asstring atan atan2 ave case choose choosen choosesets clustersize combine correlation cos cosh count covariance cron dataset dedup define denormalize distribute distributed distribution ebcdic enth error evaluate event eventextra eventname exists exp failcode failmessage fetch fromunicode getisvalid global graph group hash hash32 hash64 hashcrc hashmd5 having if index intformat isvalid iterate join keyunicode length library limit ln local log loop map matched matchlength matchposition matchtext matchunicode max merge mergejoin min nolocal nonempty normalize parse pipe power preload process project pull random range rank ranked realformat recordof regexfind regexreplace regroup rejected rollup round roundup row rowdiff sample set sin sinh sizeof soapcall sort sorted sqrt stepped stored sum table tan tanh thisnode topn tounicode transfer trim truncate typeof ungroup unicodeorder variance which workunit xmldecode xmlencode xmltext xmlunicode");
+  var variable = words("apply assert build buildindex evaluate fail keydiff keypatch loadxml nothor notify output parallel sequential soapcall wait");
+  var variable_2 = words("__compressed__ all and any as atmost before beginc++ best between case const counter csv descend encrypt end endc++ endmacro except exclusive expire export extend false few first flat from full function group header heading hole ifblock import in interface joined keep keyed last left limit load local locale lookup macro many maxcount maxlength min skew module named nocase noroot noscan nosort not of only opt or outer overwrite packed partition penalty physicallength pipe quote record relationship repeat return right scan self separator service shared skew skip sql store terminator thor threshold token transform trim true type unicodeorder unsorted validate virtual whole wild within xml xpath");
+  var variable_3 = words("ascii big_endian boolean data decimal ebcdic integer pattern qstring real record rule set of string token udecimal unicode unsigned varstring varunicode");
+  var builtin = words("checkpoint deprecated failcode failmessage failure global independent onwarning persist priority recovery stored success wait when");
+  var blockKeywords = words("catch class do else finally for if switch try while");
+  var atoms = words("true false null");
+  var hooks = {"#": metaHook};
+  var multiLineStrings;
   var isOperatorChar = /[+\-*&%=<>!?|\/]/;
 
   var curPunc;
@@ -42,10 +70,34 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
       return "operator";
     }
     stream.eatWhile(/[\w\$_]/);
-    var cur = stream.current();
-    if (keywords.propertyIsEnumerable(cur)) {
+    var cur = stream.current().toLowerCase();
+    if (keyword.propertyIsEnumerable(cur)) {
       if (blockKeywords.propertyIsEnumerable(cur)) curPunc = "newstatement";
       return "keyword";
+    } else if (variable.propertyIsEnumerable(cur)) {
+      if (blockKeywords.propertyIsEnumerable(cur)) curPunc = "newstatement";
+      return "variable";
+    } else if (variable_2.propertyIsEnumerable(cur)) {
+      if (blockKeywords.propertyIsEnumerable(cur)) curPunc = "newstatement";
+      return "variable-2";
+    } else if (variable_3.propertyIsEnumerable(cur)) {
+      if (blockKeywords.propertyIsEnumerable(cur)) curPunc = "newstatement";
+      return "variable-3";
+    } else if (builtin.propertyIsEnumerable(cur)) {
+      if (blockKeywords.propertyIsEnumerable(cur)) curPunc = "newstatement";
+      return "builtin";
+    } else { //Data types are of from KEYWORD## 
+		var i = cur.length - 1;
+		while(i >= 0 && (!isNaN(cur[i]) || cur[i] == '_'))
+			--i;
+		
+		if (i > 0) {
+			var cur2 = cur.substr(0, i + 1);
+	    	if (variable_3.propertyIsEnumerable(cur2)) {
+	      		if (blockKeywords.propertyIsEnumerable(cur2)) curPunc = "newstatement";
+	      		return "variable-3";
+	      	}
+	    }
     }
     if (atoms.propertyIsEnumerable(cur)) return "atom";
     return "word";
@@ -59,7 +111,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
         escaped = !escaped && next == "\\";
       }
       if (end || !(escaped || multiLineStrings))
-        state.tokenize = null;
+        state.tokenize = tokenBase;
       return "string";
     };
   }
@@ -68,7 +120,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
     var maybeEnd = false, ch;
     while (ch = stream.next()) {
       if (ch == "/" && maybeEnd) {
-        state.tokenize = null;
+        state.tokenize = tokenBase;
         break;
       }
       maybeEnd = (ch == "*");
@@ -148,87 +200,4 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
   };
 });
 
-(function() {
-  function words(str) {
-    var obj = {}, words = str.split(" ");
-    for (var i = 0; i < words.length; ++i) obj[words[i]] = true;
-    return obj;
-  }
-  var cKeywords = "auto if break int case long char register continue return default short do sizeof " +
-    "double static else struct entry switch extern typedef float union for unsigned " +
-    "goto while enum void const signed volatile";
-
-  function cppHook(stream, state) {
-    if (!state.startOfLine) return false;
-    stream.skipToEnd();
-    return "meta";
-  }
-
-  // C#-style strings where "" escapes a quote.
-  function tokenAtString(stream, state) {
-    var next;
-    while ((next = stream.next()) != null) {
-      if (next == '"' && !stream.eat('"')) {
-        state.tokenize = null;
-        break;
-      }
-    }
-    return "string";
-  }
-
-  CodeMirror.defineMIME("text/x-csrc", {
-    name: "clike",
-    keywords: words(cKeywords),
-    blockKeywords: words("case do else for if switch while struct"),
-    atoms: words("null"),
-    hooks: {"#": cppHook}
-  });
-  CodeMirror.defineMIME("text/x-c++src", {
-    name: "clike",
-    keywords: words(cKeywords + " asm dynamic_cast namespace reinterpret_cast try bool explicit new " +
-                    "static_cast typeid catch operator template typename class friend private " +
-                    "this using const_cast inline public throw virtual delete mutable protected " +
-                    "wchar_t"),
-    blockKeywords: words("catch class do else finally for if struct switch try while"),
-    atoms: words("true false null"),
-    hooks: {"#": cppHook}
-  });
-  CodeMirror.defineMIME("text/x-java", {
-    name: "clike",
-    keywords: words("abstract assert boolean break byte case catch char class const continue default " + 
-                    "do double else enum extends final finally float for goto if implements import " +
-                    "instanceof int interface long native new package private protected public " +
-                    "return short static strictfp super switch synchronized this throw throws transient " +
-                    "try void volatile while"),
-    blockKeywords: words("catch class do else finally for if switch try while"),
-    atoms: words("true false null"),
-    hooks: {
-      "@": function(stream, state) {
-        stream.eatWhile(/[\w\$_]/);
-        return "meta";
-      }
-    }
-  });
-  CodeMirror.defineMIME("text/x-csharp", {
-    name: "clike",
-    keywords: words("abstract as base bool break byte case catch char checked class const continue decimal" + 
-                    " default delegate do double else enum event explicit extern finally fixed float for" + 
-                    " foreach goto if implicit in int interface internal is lock long namespace new object" + 
-                    " operator out override params private protected public readonly ref return sbyte sealed short" + 
-                    " sizeof stackalloc static string struct switch this throw try typeof uint ulong unchecked" + 
-                    " unsafe ushort using virtual void volatile while add alias ascending descending dynamic from get" + 
-                    " global group into join let orderby partial remove select set value var yield"),
-    blockKeywords: words("catch class do else finally for foreach if struct switch try while"),
-    atoms: words("true false null"),
-    hooks: {
-      "@": function(stream, state) {
-        if (stream.eat('"')) {
-          state.tokenize = tokenAtString;
-          return tokenAtString(stream, state);
-        }
-        stream.eatWhile(/[\w\$_]/);
-        return "meta";
-      }
-    }
-  });
-}());
+CodeMirror.defineMIME("text/x-ecl");
