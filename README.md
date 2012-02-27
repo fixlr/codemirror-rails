@@ -35,6 +35,14 @@ Additional syntax modes can be added to your application.js:
 //= require codemirror/modes/ruby
 ```
 
+### Adding a util
+
+Additional reusable util components can be added in your application.js:
+
+```js
+//= require codemirror/utils/dialog
+```
+
 ### Adding a keymap
 
 Additional keymap bindings can be added to your application.js:
