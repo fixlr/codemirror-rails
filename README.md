@@ -17,7 +17,7 @@ Or manually install the codemirror-rails gem:
 gem install codemirror-rails
 ```
 
-### an example html ([mixed mode](http://codemirror.net/mode/htmlmixed/index.html/)) implementation
+### an example html ([mixed mode](http://codemirror.net/mode/htmlmixed/index.html)) implementation
 
 You should have a textarea element present with an ID:
 
