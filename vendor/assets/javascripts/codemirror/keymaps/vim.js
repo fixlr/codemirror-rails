@@ -224,6 +224,15 @@
     cm.setOption("keyMap", "vim-insert");
   }
 
+  function dialog(cm, text, shortText, f) {
+    if (cm.openDialog) cm.openDialog(text, f);
+    else f(prompt(shortText, ""));
+  }
+  function showAlert(cm, text) {
+    if (cm.openDialog) cm.openDialog(CodeMirror.htmlEscape(text) + " <button type=button>OK</button>");
+    else alert(text);
+  }
+
   // main keymap
   var map = CodeMirror.keyMap.vim = {
     // Pipe (|); TODO: should be *screen* chars, so need a util function to turn tabs into spaces?
@@ -293,6 +302,16 @@
       count == "" ? cm.setCursor(cm.lineCount()) : cm.setCursor(parseInt(count, 10)-1);
       popCount();
       CodeMirror.commands.goLineStart(cm);
+    },
+    "':'": function(cm) {
+      var exModeDialog = ': <input type="text" style="width: 90%"/>';
+      dialog(cm, exModeDialog, ':', function(command) {
+        if (command.match(/^\d+$/)) {
+          cm.setCursor(command - 1, cm.getCursor().ch);
+        } else {
+          showAlert(cm, "Bad command: " + command);
+        }
+      });
     },
     nofallthrough: true, style: "fat-cursor"
   };
