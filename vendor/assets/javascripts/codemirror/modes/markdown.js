@@ -38,6 +38,8 @@ CodeMirror.defineMode("markdown", function(cmCfg, modeCfg) {
     state.em = false;
     // Reset STRONG state
     state.strong = false;
+    // Reset state.quote
+    state.quote = false;
     if (!htmlFound && state.f == htmlBlock) {
       state.f = inlineNormal;
       state.block = blockNormal;
@@ -106,7 +108,7 @@ CodeMirror.defineMode("markdown", function(cmCfg, modeCfg) {
   }
 
   function inlineNormal(stream, state) {
-    var style = state.text(stream, state)
+    var style = state.text(stream, state);
     if (typeof style !== 'undefined')
       return style;
     
@@ -119,7 +121,7 @@ CodeMirror.defineMode("markdown", function(cmCfg, modeCfg) {
     if (ch === '`') {
       return switchInline(stream, state, inlineElement(code, '`'));
     }
-    if (ch === '[') {
+    if (ch === '[' && stream.match(/.*\](?:\(|\[)/, false)) {
       return switchInline(stream, state, linkText);
     }
     if (ch === '<' && stream.match(/^\w/, false)) {
@@ -246,8 +248,6 @@ CodeMirror.defineMode("markdown", function(cmCfg, modeCfg) {
 
         // Reset state.header
         state.header = false;
-        // Reset state.quote
-        state.quote = false;
 
         state.f = state.block;
         var indentation = stream.match(/^\s*/, true)[0].replace(/\t/g, '    ').length;

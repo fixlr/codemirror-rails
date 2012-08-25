@@ -3,7 +3,7 @@ require File.expand_path('../lib/codemirror/rails/version', __FILE__)
 Gem::Specification.new do |s|
   s.name = 'codemirror-rails'
   s.version = Codemirror::Rails::VERSION
-  s.authors = ['Nathan Fixler', 'Robin Bühler']
+  s.authors = ['Nathan Fixler']
   s.email = 'nathan@fixler.org'
   s.summary = 'Use CodeMirror with Rails 3'
   s.description = 'This gem provides CodeMirror assets for your Rails 3 application.'
