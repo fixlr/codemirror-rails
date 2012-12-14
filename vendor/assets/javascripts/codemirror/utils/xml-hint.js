@@ -36,7 +36,7 @@
 
             text = text.slice(0, text.length - typed.length);
 
-            var path = getActiveElement(cm, text) + simbol;
+            var path = getActiveElement(text) + simbol;
             var hints = CodeMirror.xmlHints[path];
 
             if(typeof hints === 'undefined')
@@ -57,7 +57,7 @@
         };
     };
 
-    var getActiveElement = function(codeMirror, text) {
+    var getActiveElement = function(text) {
 
         var element = '';
 
