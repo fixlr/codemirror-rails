@@ -1,6 +1,6 @@
 # codemirror-rails
 
-Wire up the [CodeMirror](http://codemirror.net/) assets for your Rails 
+Wire up the [CodeMirror](http://codemirror.net/) assets for your Rails
 applications.
 
 ## Getting Started
@@ -17,7 +17,7 @@ Or manually install the codemirror-rails gem:
 gem install codemirror-rails
 ```
 
-## CodeMirror for Rails 3.1
+## CodeMirror for Rails >= 3.1
 
 All of the assets from the most latest stable CodeMirror release are vendored
 so that you can use them with the asset pipeline.  At a minimum, you will
@@ -67,3 +67,6 @@ assets into your Rails 3 public directory.
 ```shell
 rails generate codemirror:install
 ```
+### Contributing
+
+Find a mistake? New version of CodeMirror? Submit a pull request!
