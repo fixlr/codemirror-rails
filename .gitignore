@@ -1,3 +1,6 @@
-*.gem
-Gemfile.lock
-test/dummy/tmp/cache/assets/
+/*.gem
+/Gemfile.lock
+/test/dummy/tmp/cache/assets/
+.DS_Store
+/.bundle
+/tmp/
