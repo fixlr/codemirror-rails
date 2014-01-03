@@ -14,8 +14,8 @@ Gem::Specification.new do |s|
   s.homepage = 'https://rubygems.org/gems/codemirror-rails'
 
   s.files = `git ls-files`.split $/
-  s.executables = spec.files.grep(%r{^bin/}) { |f| File.basename f }
-  s.test_files = spec.files.grep(%r{^(test|spec|features)/})
+  s.executables = s.files.grep(%r{^bin/}) { |f| File.basename f }
+  s.test_files = s.files.grep(%r{^(test|spec|features)/})
   s.require_paths = %w(lib)
 
   s.add_runtime_dependency 'railties', '>= 3.0', '< 5'
