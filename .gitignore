@@ -1,3 +1,16 @@
-*.gem
-Gemfile.lock
+# Ignore config files & directories
+/.bundle
+/.idea
+
+# Ignore unnecessary Ruby project components
+*.lock
+/log
+/spec
+/tmp
+/vendor
+
+# Ignore OS cache files
+.DS_Store
+
+# Ignore excess project files
 test/dummy/tmp/cache/assets/
