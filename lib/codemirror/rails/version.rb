@@ -1,6 +1,6 @@
 module Codemirror
   module Rails
-    VERSION = '3.16'
-    CODEMIRROR_VERSION = '3.16'
+    VERSION = '3.20'
+    CODEMIRROR_VERSION = '3.20'
   end
 end
