@@ -59,6 +59,15 @@ Additional CSS themes can be added to your application.css
 //= require codemirror/themes/night
 ```
 
+### Precompiling Codemirror
+
+If your project is using precompiling, depending on your method of grabbing files to precompile, you might need to add the below line to your ```` application.rb```, to get rails to precompile all js, css files used by codemirror. You can also manually whitelist only the files that you use.
+
+```rb
+config.assets.precompile += ["codemirror*", "codemirror/**/*"]
+```
+
+
 ## CodeMirror for Rails 3
 
 You can use the generator included with this gem to copy the CodeMirror 2
