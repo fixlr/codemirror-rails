@@ -66,6 +66,11 @@
   position: absolute;
 }
 
+/* By Default, we'd like liquid tags/etc to be bold */
+.cm-liquid {
+  font-weight: bold;
+}
+
 /* DEFAULT THEME */
 
 .cm-s-default .cm-keyword {color: #708;}
