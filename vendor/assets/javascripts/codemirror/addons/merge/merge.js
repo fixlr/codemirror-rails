@@ -82,6 +82,10 @@
     }
     dv.edit.on("change", change);
     dv.orig.on("change", change);
+    dv.edit.on("markerAdded", set);
+    dv.edit.on("markerCleared", set);
+    dv.orig.on("markerAdded", set);
+    dv.orig.on("markerCleared", set);
     dv.edit.on("viewportChange", set);
     dv.orig.on("viewportChange", set);
     update();
@@ -349,6 +353,12 @@
     setShowDifferences: function(val) {
       if (this.right) this.right.setShowDifferences(val);
       if (this.left) this.left.setShowDifferences(val);
+    },
+    rightChunks: function() {
+      return this.right && getChunks(this.right.diff);
+    },
+    leftChunks: function() {
+      return this.left && getChunks(this.left.diff);
     }
   };
 
@@ -397,6 +407,15 @@
     }
     if (startEdit <= edit.line || startOrig <= orig.line)
       f(startOrig, orig.line + 1, startEdit, edit.line + 1);
+  }
+
+  function getChunks(diff) {
+    var collect = [];
+    iterateChunks(diff, function(topOrig, botOrig, topEdit, botEdit) {
+      collect.push({origFrom: topOrig, origTo: botOrig,
+                    editFrom: topEdit, editTo: botEdit});
+    });
+    return collect;
   }
 
   function endOfLineClean(diff, i) {
