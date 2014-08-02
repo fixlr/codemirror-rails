@@ -6,8 +6,8 @@ Gem::Specification.new do |s|
   s.authors = ['Nathan Fixler']
   s.email = 'nathan@fixler.org'
   s.license = 'MIT'
-  s.summary = 'Use CodeMirror with Rails 3'
-  s.description = 'This gem provides CodeMirror assets for your Rails 3 application.'
+  s.summary = 'Use CodeMirror with Rails'
+  s.description = 'This gem provides CodeMirror assets for your Rails application.'
   s.homepage = 'https://rubygems.org/gems/codemirror-rails'
 
   s.files = `git ls-files`.split("\n")
