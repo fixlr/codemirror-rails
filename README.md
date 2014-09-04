@@ -27,6 +27,10 @@ probably want the following in your application.js and application.css:
 //= require codemirror
 ```
 
+```css
+*= require codemirror
+```
+
 ### Adding a mode
 
 Additional syntax modes can be added to your application.js:
@@ -55,8 +59,8 @@ Additional keymap bindings can be added to your application.js:
 
 Additional CSS themes can be added to your application.css
 
-```js
-//= require codemirror/themes/night
+```css
+*= require codemirror/themes/night
 ```
 
 ### Precompiling Codemirror
