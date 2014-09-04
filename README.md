@@ -21,11 +21,18 @@ gem install codemirror-rails
 
 All of the assets from the most latest stable CodeMirror release are vendored
 so that you can use them with the asset pipeline.  At a minimum, you will
-probably want the following in your application.js and application.css:
+probably want the following in your application.js:
 
 ```js
 //= require codemirror
 ```
+
+And in your application.css:
+
+```css
+/*
+*= require codemirror
+*/```
 
 ### Adding a mode
 
@@ -55,8 +62,10 @@ Additional keymap bindings can be added to your application.js:
 
 Additional CSS themes can be added to your application.css
 
-```js
-//= require codemirror/themes/night
+```css
+/*
+*= require codemirror/themes/night
+*/
 ```
 
 ### Precompiling Codemirror
