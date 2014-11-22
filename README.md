@@ -32,7 +32,8 @@ And in your application.css:
 ```css
 /*
 *= require codemirror
-*/```
+*/
+```
 
 ### Adding a mode
 
