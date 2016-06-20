@@ -48,14 +48,14 @@ Additional syntax modes can be added to your application.js:
 Additional addons can be added in your application.js:
 
 ```js
-//= require_tree codemirror/addons/dialog
+//= require codemirror/addons/dialog
 ```
 
 And your application.css:
 
 ```css
 /*
-*= require_tree codemirror/addons/dialog
+*= require codemirror/addons/dialog
 */
 ```
 
