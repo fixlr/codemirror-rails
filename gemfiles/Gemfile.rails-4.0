@@ -1,4 +1,5 @@
 source 'https://rubygems.org'
 gemspec :path => '../'
 
-gem 'rails', '~> 4.0.0'
+gem 'rails',      '~> 4.0.0'
+gem 'mime-types', '~> 2.0', :platform => :ruby_19
