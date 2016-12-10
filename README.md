@@ -97,3 +97,11 @@ rails generate codemirror:install
 ### Contributing
 
 Find a mistake? New version of CodeMirror? Submit a pull request!
+
+When adding a new version of CodeMirror, download and unzip the distribution, and run the following script to vendor it.
+
+```rb
+rake import DIR=/path/to/downloaded/codemirror-x.y
+```
+
+You may have to tweak `tasks/import.rake` if the distribution layout changes.
