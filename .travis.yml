@@ -19,3 +19,6 @@ matrix:
       gemfile: gemfiles/Gemfile.rails-4.0
     - rvm: 2.3
       gemfile: gemfiles/Gemfile.rails-3.2
+  exclude:
+    - rvm: 2.7 # bundler version incompatible
+      gemfile: gemfiles/Gemfile.rails-4.2
