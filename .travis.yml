@@ -17,10 +17,3 @@ matrix:
       gemfile: gemfiles/Gemfile.rails-5.0
     - rvm: 2.1.2
       gemfile: gemfiles/Gemfile.rails-5.0
-  include:
-    - rvm: 1.9.3
-      gemfile: gemfiles/Gemfile.rails-3.2
-    - rvm: 1.9.3
-      gemfile: gemfiles/Gemfile.ruby-1.9_rails-4.0
-    - rvm: 1.9.3
-      gemfile: gemfiles/Gemfile.ruby-1.9_rails-4.1
