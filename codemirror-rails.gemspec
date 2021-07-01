@@ -1,4 +1,4 @@
-require File.expand_path('../lib/codemirror/rails/version', __FILE__)
+require File.expand_path('lib/codemirror/rails/version', __dir__)
 
 Gem::Specification.new do |s|
   s.name = 'codemirror-rails'
@@ -10,11 +10,11 @@ Gem::Specification.new do |s|
   s.description = 'This gem provides CodeMirror assets for your Rails application.'
   s.homepage = 'https://rubygems.org/gems/codemirror-rails'
 
-  s.files = Dir.glob('{doc,lib,vendor}/**/*') + %w(LICENSE README.md)
+  s.files = Dir.glob('{doc,lib,vendor}/**/*') + %w[LICENSE README.md]
 
-  s.add_runtime_dependency 'railties', '>= 3.0', '< 6.0'
+  s.add_runtime_dependency 'railties', '>= 3.0', '< 7.0'
 
+  s.add_development_dependency 'minitest'
   s.add_development_dependency 'rails'
   s.add_development_dependency 'sqlite3'
-  s.add_development_dependency 'minitest'
 end
